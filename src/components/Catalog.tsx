@@ -1,23 +1,14 @@
 import { useState } from "react";
 import Icon from "@/components/ui/icon";
-import { TECHNOLOGIES } from "@/data/technologies";
+import { USE_CASES } from "@/data/technologies";
 
 export default function Catalog() {
-  const [activeTech, setActiveTech] = useState<"fdm" | "sla">("fdm");
-  const [activeUseCase, setActiveUseCase] = useState<string>("deco");
+  const [activeUseCase, setActiveUseCase] = useState<string>("tech");
   const [activeMaterial, setActiveMaterial] = useState<number>(0);
   const [hoveredColor, setHoveredColor] = useState<string | null>(null);
 
-  const tech = TECHNOLOGIES.find((t) => t.id === activeTech)!;
-  const useCase = tech.useCases.find((u) => u.id === activeUseCase) ?? tech.useCases[0];
+  const useCase = USE_CASES.find((u) => u.id === activeUseCase)!;
   const material = useCase.materials[activeMaterial] ?? useCase.materials[0];
-
-  const handleTechChange = (id: "fdm" | "sla") => {
-    setActiveTech(id);
-    setActiveUseCase(TECHNOLOGIES.find((t) => t.id === id)!.useCases[0].id);
-    setActiveMaterial(0);
-    setHoveredColor(null);
-  };
 
   const handleUseCaseChange = (id: string) => {
     setActiveUseCase(id);
@@ -25,117 +16,72 @@ export default function Catalog() {
     setHoveredColor(null);
   };
 
+  const handleMaterialChange = (idx: number) => {
+    setActiveMaterial(idx);
+    setHoveredColor(null);
+  };
+
+  const accentRgb = useCase.accentRgb;
+  const matAccentRgb = material.techAccentRgb;
+
   return (
     <section id="catalog" className="py-20 px-6 max-w-7xl mx-auto">
 
+      {/* Header */}
       <div className="mb-10">
         <p className="text-white/30 text-xs uppercase tracking-widest font-semibold mb-2">Материалы в наличии</p>
         <h2 className="font-display text-4xl md:text-5xl font-bold text-white uppercase leading-tight">
-          Выбери технологию —<br />
-          <span style={{ color: `rgb(${tech.accentRgb})` }}>подберём материал</span>
+          Что нужно<br />
+          <span style={{ color: `rgb(${accentRgb})`, transition: "color 0.3s" }}>напечатать?</span>
         </h2>
       </div>
 
-      {/* ── STEP 1: технология ── */}
+      {/* ── STEP 1: задача ── */}
       <div className="mb-8">
         <p className="text-white/25 text-xs uppercase tracking-widest font-semibold mb-4">
           <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-white/10 text-white mr-2 text-xs font-bold">1</span>
-          Технология печати
+          Выбери категорию
         </p>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {TECHNOLOGIES.map((t) => (
-            <button
-              key={t.id}
-              onClick={() => handleTechChange(t.id as "fdm" | "sla")}
-              className="text-left rounded-2xl p-5 border transition-all"
-              style={{
-                backgroundColor: activeTech === t.id ? `rgba(${t.accentRgb},0.1)` : "rgba(255,255,255,0.03)",
-                borderColor: activeTech === t.id ? `rgba(${t.accentRgb},0.55)` : "rgba(255,255,255,0.08)",
-                boxShadow: activeTech === t.id ? `0 0 30px rgba(${t.accentRgb},0.15)` : "none",
-              }}
-            >
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex items-center gap-3">
-                  <div
-                    className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                    style={{ backgroundColor: `rgba(${t.accentRgb},0.15)` }}
-                  >
-                    <Icon name={t.icon} size={18} style={{ color: `rgb(${t.accentRgb})` }} />
-                  </div>
-                  <div>
-                    <div className="font-display text-2xl font-bold text-white tracking-wider">{t.name}</div>
-                    <div className="text-white/35 text-xs">{t.fullName}</div>
-                  </div>
-                </div>
-                {activeTech === t.id && (
-                  <div className="w-5 h-5 rounded-full flex items-center justify-center mt-1" style={{ backgroundColor: `rgb(${t.accentRgb})` }}>
-                    <Icon name="Check" size={11} className="text-black" />
-                  </div>
-                )}
-              </div>
-              <p className="text-white/40 text-xs mb-3">{t.tagline}</p>
-              <div className="flex flex-wrap gap-2">
-                {t.pros.map((p) => (
-                  <span key={p} className="text-xs px-2 py-1 rounded-full bg-white/5 text-white/50 border border-white/8">
-                    ✓ {p}
-                  </span>
-                ))}
-              </div>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* ── STEP 2: задача ── */}
-      <div
-        key={activeTech + "-uc"}
-        className="mb-8 animate-fade-in-scale"
-        style={{ animationFillMode: "forwards" }}
-      >
-        <p className="text-white/25 text-xs uppercase tracking-widest font-semibold mb-4">
-          <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-white/10 text-white mr-2 text-xs font-bold">2</span>
-          Что нужно напечатать?
-        </p>
-        <div className="flex flex-wrap gap-3">
-          {tech.useCases.map((uc) => (
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          {USE_CASES.map((uc) => (
             <button
               key={uc.id}
               onClick={() => handleUseCaseChange(uc.id)}
-              className="flex items-center gap-2.5 px-4 py-3 rounded-2xl border transition-all text-sm"
+              className="flex flex-col items-start gap-2 p-4 rounded-2xl border transition-all text-left"
               style={{
-                backgroundColor: activeUseCase === uc.id ? `rgba(${tech.accentRgb},0.15)` : "rgba(255,255,255,0.04)",
-                borderColor: activeUseCase === uc.id ? `rgba(${tech.accentRgb},0.55)` : "rgba(255,255,255,0.09)",
-                color: activeUseCase === uc.id ? `rgb(${tech.accentRgb})` : "rgba(255,255,255,0.45)",
-                fontWeight: activeUseCase === uc.id ? 700 : 400,
+                backgroundColor: activeUseCase === uc.id ? `rgba(${uc.accentRgb},0.12)` : "rgba(255,255,255,0.03)",
+                borderColor: activeUseCase === uc.id ? `rgba(${uc.accentRgb},0.55)` : "rgba(255,255,255,0.08)",
+                boxShadow: activeUseCase === uc.id ? `0 0 24px rgba(${uc.accentRgb},0.15)` : "none",
               }}
             >
-              <span className="text-lg leading-none">{uc.emoji}</span>
-              <span>{uc.label}</span>
+              <span className="text-2xl">{uc.emoji}</span>
+              <span
+                className="font-semibold text-sm leading-tight"
+                style={{ color: activeUseCase === uc.id ? `rgb(${uc.accentRgb})` : "rgba(255,255,255,0.65)" }}
+              >
+                {uc.label}
+              </span>
+              <span className="text-white/25 text-xs leading-snug">{uc.desc}</span>
             </button>
           ))}
         </div>
-        {useCase && (
-          <p className="text-white/25 text-xs mt-3 ml-1">
-            {useCase.desc}
-          </p>
-        )}
       </div>
 
-      {/* ── STEP 3: материал + цвета ── */}
+      {/* ── STEP 2: материал + справка ── */}
       <div
-        key={activeTech + activeUseCase}
+        key={activeUseCase}
         className="rounded-3xl border overflow-hidden animate-fade-in-scale"
         style={{
           animationFillMode: "forwards",
-          borderColor: `rgba(${tech.accentRgb},0.2)`,
+          borderColor: `rgba(${accentRgb},0.2)`,
           backgroundColor: "rgba(255,255,255,0.025)",
         }}
       >
-        <div className="h-0.5 w-full" style={{ background: `linear-gradient(90deg, rgb(${tech.accentRgb}), transparent)` }} />
+        <div className="h-0.5 w-full" style={{ background: `linear-gradient(90deg, rgb(${accentRgb}), transparent)` }} />
 
         <div className="p-6 md:p-8">
           <p className="text-white/25 text-xs uppercase tracking-widest font-semibold mb-4">
-            <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-white/10 text-white mr-2 text-xs font-bold">3</span>
+            <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-white/10 text-white mr-2 text-xs font-bold">2</span>
             Подходящие материалы
           </p>
 
@@ -144,30 +90,72 @@ export default function Catalog() {
             {useCase.materials.map((m, idx) => (
               <button
                 key={idx}
-                onClick={() => { setActiveMaterial(idx); setHoveredColor(null); }}
-                className="px-4 py-2.5 rounded-xl border text-sm transition-all"
+                onClick={() => handleMaterialChange(idx)}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm transition-all"
                 style={{
-                  backgroundColor: activeMaterial === idx ? `rgba(${tech.accentRgb},0.18)` : "rgba(255,255,255,0.05)",
-                  borderColor: activeMaterial === idx ? `rgba(${tech.accentRgb},0.6)` : "rgba(255,255,255,0.1)",
-                  color: activeMaterial === idx ? `rgb(${tech.accentRgb})` : "rgba(255,255,255,0.45)",
+                  backgroundColor: activeMaterial === idx ? `rgba(${m.techAccentRgb},0.18)` : "rgba(255,255,255,0.05)",
+                  borderColor: activeMaterial === idx ? `rgba(${m.techAccentRgb},0.6)` : "rgba(255,255,255,0.1)",
+                  color: activeMaterial === idx ? `rgb(${m.techAccentRgb})` : "rgba(255,255,255,0.45)",
                   fontWeight: activeMaterial === idx ? 700 : 400,
                 }}
               >
                 {m.name}
+                <span
+                  className="text-xs px-1.5 py-0.5 rounded-md font-bold"
+                  style={{
+                    backgroundColor: `rgba(${m.techAccentRgb},0.15)`,
+                    color: `rgb(${m.techAccentRgb})`,
+                  }}
+                >
+                  {m.tech}
+                </span>
               </button>
             ))}
           </div>
 
-          {/* material note */}
+          {/* справка: материал + технология */}
           <div
-            className="rounded-2xl px-4 py-3 mb-8 text-sm font-medium"
-            style={{
-              backgroundColor: `rgba(${tech.accentRgb},0.07)`,
-              color: `rgb(${tech.accentRgb})`,
-              border: `1px solid rgba(${tech.accentRgb},0.2)`,
-            }}
+            key={activeUseCase + activeMaterial}
+            className="grid md:grid-cols-2 gap-4 mb-8 animate-fade-in-scale"
+            style={{ animationFillMode: "forwards" }}
           >
-            💡 {material.note}
+            {/* про материал */}
+            <div
+              className="rounded-2xl p-4"
+              style={{
+                backgroundColor: `rgba(${accentRgb},0.07)`,
+                border: `1px solid rgba(${accentRgb},0.2)`,
+              }}
+            >
+              <p className="text-white/35 text-xs uppercase tracking-widest font-semibold mb-2">О материале</p>
+              <p className="font-display text-lg font-bold text-white mb-1">{material.name}</p>
+              <p className="text-white/60 text-sm leading-relaxed">💡 {material.note}</p>
+            </div>
+
+            {/* про технологию */}
+            <div
+              className="rounded-2xl p-4"
+              style={{
+                backgroundColor: `rgba(${matAccentRgb},0.07)`,
+                border: `1px solid rgba(${matAccentRgb},0.2)`,
+              }}
+            >
+              <p className="text-white/35 text-xs uppercase tracking-widest font-semibold mb-2">Технология печати</p>
+              <div className="flex items-center gap-2 mb-1">
+                <span
+                  className="font-display text-lg font-bold"
+                  style={{ color: `rgb(${matAccentRgb})` }}
+                >
+                  {material.tech}
+                </span>
+                <Icon
+                  name={material.tech === "FDM" ? "Layers" : "Gem"}
+                  size={14}
+                  style={{ color: `rgb(${matAccentRgb})` }}
+                />
+              </div>
+              <p className="text-white/60 text-sm leading-relaxed">{material.techNote}</p>
+            </div>
           </div>
 
           {/* colors */}
@@ -184,15 +172,15 @@ export default function Catalog() {
                   className="w-11 h-11 rounded-full border-2 transition-all duration-200"
                   style={{
                     backgroundColor: c.hex,
-                    borderColor: hoveredColor === c.name ? `rgb(${tech.accentRgb})` : "rgba(255,255,255,0.12)",
+                    borderColor: hoveredColor === c.name ? `rgb(${matAccentRgb})` : "rgba(255,255,255,0.12)",
                     transform: hoveredColor === c.name ? "scale(1.3)" : "scale(1)",
-                    boxShadow: hoveredColor === c.name ? `0 0 14px rgba(${tech.accentRgb},0.7)` : "none",
+                    boxShadow: hoveredColor === c.name ? `0 0 14px rgba(${matAccentRgb},0.7)` : "none",
                   }}
                 />
                 <span
                   className="text-xs text-center leading-tight max-w-[56px] transition-all duration-200"
                   style={{
-                    color: hoveredColor === c.name ? `rgb(${tech.accentRgb})` : "rgba(255,255,255,0.28)",
+                    color: hoveredColor === c.name ? `rgb(${matAccentRgb})` : "rgba(255,255,255,0.28)",
                     fontWeight: hoveredColor === c.name ? 600 : 400,
                   }}
                 >
@@ -207,15 +195,15 @@ export default function Catalog() {
             <div>
               <p className="text-white/60 text-sm font-medium">Нашёл нужный вариант?</p>
               <p className="text-white/25 text-xs mt-0.5">
-                {tech.name} · {useCase.label} · {material.name}
+                {useCase.label} · {material.name} · {material.tech}
               </p>
             </div>
             <button
               className="inline-flex items-center gap-2 font-bold px-6 py-3 rounded-full transition-all hover:scale-105 text-sm flex-shrink-0"
               style={{
-                backgroundColor: `rgb(${tech.accentRgb})`,
-                color: tech.id === "fdm" ? "#000000" : "#ffffff",
-                boxShadow: `0 0 22px rgba(${tech.accentRgb},0.4)`,
+                backgroundColor: `rgb(${matAccentRgb})`,
+                color: material.tech === "FDM" ? "#000000" : "#ffffff",
+                boxShadow: `0 0 22px rgba(${matAccentRgb},0.4)`,
               }}
             >
               Заказать печать
