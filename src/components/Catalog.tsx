@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import Icon from "@/components/ui/icon";
 import { USE_CASES } from "@/data/technologies";
 
@@ -7,18 +7,41 @@ export default function Catalog() {
   const [activeMaterial, setActiveMaterial] = useState<number>(0);
   const [hoveredColor, setHoveredColor] = useState<string | null>(null);
 
+  // Отслеживаем предыдущую технологию, чтобы понять что анимировать
+  const prevTechRef = useRef<string>(USE_CASES[0].materials[0].tech);
+  // Ключи для принудительного перезапуска анимации
+  const [matAnimKey, setMatAnimKey] = useState(0);
+  const [techAnimKey, setTechAnimKey] = useState(0);
+
   const useCase = USE_CASES.find((u) => u.id === activeUseCase)!;
   const material = useCase.materials[activeMaterial] ?? useCase.materials[0];
 
   const handleUseCaseChange = (id: string) => {
+    const newUseCase = USE_CASES.find((u) => u.id === id)!;
+    const newMaterial = newUseCase.materials[0];
+    const techChanged = newMaterial.tech !== prevTechRef.current;
+
     setActiveUseCase(id);
     setActiveMaterial(0);
     setHoveredColor(null);
+
+    setMatAnimKey((k) => k + 1);
+    if (techChanged) setTechAnimKey((k) => k + 1);
+    prevTechRef.current = newMaterial.tech;
   };
 
   const handleMaterialChange = (idx: number) => {
+    const newMaterial = useCase.materials[idx];
+    const techChanged = newMaterial.tech !== prevTechRef.current;
+
     setActiveMaterial(idx);
     setHoveredColor(null);
+
+    // Всегда анимируем блок материала
+    setMatAnimKey((k) => k + 1);
+    // Блок технологии — только если tech сменилась
+    if (techChanged) setTechAnimKey((k) => k + 1);
+    prevTechRef.current = newMaterial.tech;
   };
 
   const accentRgb = useCase.accentRgb;
@@ -69,15 +92,20 @@ export default function Catalog() {
 
       {/* ── STEP 2: материал + справка ── */}
       <div
-        key={activeUseCase}
-        className="rounded-3xl border overflow-hidden animate-fade-in-scale"
+        className="rounded-3xl border overflow-hidden"
         style={{
-          animationFillMode: "forwards",
           borderColor: `rgba(${accentRgb},0.2)`,
           backgroundColor: "rgba(255,255,255,0.025)",
+          transition: "border-color 0.3s",
         }}
       >
-        <div className="h-0.5 w-full" style={{ background: `linear-gradient(90deg, rgb(${accentRgb}), transparent)` }} />
+        <div
+          className="h-0.5 w-full"
+          style={{
+            background: `linear-gradient(90deg, rgb(${accentRgb}), transparent)`,
+            transition: "background 0.3s",
+          }}
+        />
 
         <div className="p-6 md:p-8">
           <p className="text-white/25 text-xs uppercase tracking-widest font-semibold mb-4">
@@ -114,15 +142,13 @@ export default function Catalog() {
           </div>
 
           {/* справка: материал + технология */}
-          <div
-            key={activeUseCase + activeMaterial}
-            className="grid md:grid-cols-2 gap-4 mb-8 animate-fade-in-scale"
-            style={{ animationFillMode: "forwards" }}
-          >
-            {/* про материал */}
+          <div className="grid md:grid-cols-2 gap-4 mb-8">
+            {/* блок материала — анимируется всегда при смене */}
             <div
-              className="rounded-2xl p-4"
+              key={`mat-${matAnimKey}`}
+              className="rounded-2xl p-4 animate-fade-in-scale"
               style={{
+                animationFillMode: "forwards",
                 backgroundColor: `rgba(${accentRgb},0.07)`,
                 border: `1px solid rgba(${accentRgb},0.2)`,
               }}
@@ -132,10 +158,12 @@ export default function Catalog() {
               <p className="text-white/60 text-sm leading-relaxed">💡 {material.note}</p>
             </div>
 
-            {/* про технологию */}
+            {/* блок технологии — анимируется только при смене tech */}
             <div
-              className="rounded-2xl p-4"
+              key={`tech-${techAnimKey}`}
+              className="rounded-2xl p-4 animate-fade-in-scale"
               style={{
+                animationFillMode: "forwards",
                 backgroundColor: `rgba(${matAccentRgb},0.07)`,
                 border: `1px solid rgba(${matAccentRgb},0.2)`,
               }}
